@@ -1,58 +1,56 @@
+'use strict';
 
+var gitignore = require('../middleware/gitignore');
+var unignore = require('../middleware/unignore');
+var dotfiles = require('../middleware/dotfiles');
+var isnt = require('../middleware/isnt');
+// var glob = require('..')({ gitignore: false, ignore: 'node_modules' })
+var glob = require('..')({ gitignore: true, track: true })
 
-/**
- * STREAM EXAMPLE
- * --------------------------------
- */
-
-var glob = new Glob({ gitignore: false });
-var fns = require('../middleware/gitignore');
-// var Vinyl = require('vinyl');
-
-// glob.exclude('*.txt', {matchBase: true});
+glob
+  .exclude('*.css')
+  .exclude('*.js')
+  .exclude('*.yml');
 // glob.exclude('*.js', {matchBase: true});
 // var mini = require('minimatch');
 
 glob
-  .use(fns.gitignore())
-  .use(fns.dotfiles())
-  .use(function (file, options, next) {
-    file.isMatch = mm.isMatch(file.path, this.pattern.glob);
-    next(null, file);
-  })
+  .use(gitignore())
+  .use(dotfiles({dotfile: true}))
 
 var globFiles = [];
 console.time('glob');
 
-glob.readdirStream('**/*')
+glob.readdirStream('**/*.*')
   .on('data', function (file) {
+    console.log(file.path)
     // file = new Vinyl(file)
     // console.log(file)
-    globFiles.push(file);
-    if (globFiles.length % 100 === 0) {
-      console.log('glob', globFiles.length);
-    }
+    // globFiles.push(file);
+    // if (globFiles.length % 100 === 0) {
+    //   console.log('glob', globFiles.length);
+    // }
   })
   .on('error', console.error)
   .on('end', function () {
     console.timeEnd('glob')
-    console.log(globFiles.length);
+    // console.log(globFiles.length);
 
-    var files = [];
-    var gulp = require('gulp');
-    console.time('gulp');
-    gulp.src('**/*', {read: false})
-      .on('data', function (file) {
-        files.push(file);
-        if (files.length % 100 === 0) {
-          console.log('gulp', files.length);
-        }
-      })
-      .on('error', console.error)
-      .on('end', function () {
-        console.timeEnd('gulp');
-        console.log(files.length);
-      });
+    // var files = [];
+    // var gulp = require('gulp');
+    // console.time('gulp');
+    // gulp.src('**/*', {read: false})
+    //   .on('data', function (file) {
+    //     files.push(file);
+    //     if (files.length % 100 === 0) {
+    //       console.log('gulp', files.length);
+    //     }
+    //   })
+    //   .on('error', console.error)
+    //   .on('end', function () {
+    //     console.timeEnd('gulp');
+    //     console.log(files.length);
+    //   });
   });
 
 

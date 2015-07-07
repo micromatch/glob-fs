@@ -1,41 +1,46 @@
 'use strict';
 
-var mm = require('micromatch');
+var gitignore = require('../middleware/gitignore');
+var unignore = require('../middleware/unignore');
+var dotfiles = require('../middleware/dotfiles');
+var isnt = require('../middleware/isnt');
 // var glob = require('..')({ gitignore: false, ignore: 'node_modules' })
-var glob = require('..')({ gitignore: false })
+var glob = require('..')({ gitignore: true, track: true, dot: true })
   // .use(require('foo'))
   // .use(require('bar'))
 
 // glob.exclude('*.txt', {matchBase: true});
 // glob.exclude('*.js', {matchBase: true});
-var middleware = require('../middleware');
 // var mini = require('minimatch');
 
 // glob.on('file', function (file) {
 //   console.log('file', file.path)
 // });
 
-// glob.on('exclude', function (file) {
-//   if (/glob\.js/.test(file.path)) {
-//     file.exclude = false;
-//   }
-//   console.log('exclude', file.path)
-// });
+glob.on('exclude', function (file) {
+  // if (/\.git(\/|$)/.test(file.path)) {
+  //   glob.files.push(file.path);
+  // }
+  // console.log('excluded:', file.path)
+});
 
-// glob
-//   .use(middleware.gitignore())
-//   .use(function (file) {
-//     if (/^node_modules/.test(file.path)) {
-//       file.exclude = true;
-//     }
-//     return file;
-//   })
+glob.on('include', function (file) {
+  // console.log('included:', file)
+});
+
+glob
+  .use(dotfiles())
+  .use(gitignore())
+  .use(isnt(/^node_modules/))
+  .use(unignore(/\.gitignore/))
 
 
 console.time('glob')
-glob.readdirSync('**/*.js');
+var res = glob.readdirSync('**/*.js');
+  // .get('**/stream.js')
+
 console.timeEnd('glob')
-console.log(glob.list);
+console.log(res);
 
 // var globby = require('globby');
 // console.time('globby');
