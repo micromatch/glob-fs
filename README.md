@@ -423,21 +423,41 @@ glob.readdirStream('**/*')
 
 ## TODO
 
-* [ ] Multiple pattern support. will need to change pattern handling, middleware handling. this is POC currently
-* [ ] Negation patterns (might not do this, since it can be handled in middleware)
+**middleware**
+
 * [x] middleware
 * [x] middleware handler
 * [ ] externalize middleware to modules (started, [prs welcome!](#contributing))
+
+**events**
+
 * [x] events
+
+**tests**
+
 * [x] unit tests (need to be moved)
+
+**iterators**
+
 * [x] sync iterator
 * [x] async iterator
 * [x] stream iterator
 * [x] promise iterator
+
+**read methods**
+
 * [x] glob.readdir (async)
 * [x] glob.readdirSync
 * [x] glob.readdirStream
 * [x] glob.readdirPromise
+
+**patterns**
+
+* [ ] Multiple pattern support. will need to change pattern handling, middleware handling. this is POC currently
+* [ ] Negation patterns (might not do this, since it can be handled in middleware)
+
+**other**
+
 * [ ] clean up `./lib`
 * [ ](https://github.com/isaacs/node-glob/)[] comparison
 
