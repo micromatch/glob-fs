@@ -86,6 +86,7 @@ Glob.prototype = Emitter({
     this.pattern = new Pattern(pattern, options);
     this.recurse = this.shouldRecurse(this.pattern.glob, options);
 
+    // if middleware are registered, use the glob, otherwise regex
     var glob = this.fns.length
       ? this.pattern.glob
       : this.pattern.re;
