@@ -1,8 +1,6 @@
 'use strict';
 
-var unignore = require('../middleware/unignore');
 var dotfiles = require('../middleware/dotfiles');
-var isnt = require('../middleware/isnt');
 var glob = require('..');
 var files = [];
 

@@ -10,7 +10,6 @@ var glob = require('..');
 
 function tests(options) {
   return function(file) {
-    console.log(file)
     if (/^test\//.test(file.dirname)) {
       file.exclude = true;
     }

@@ -1,9 +1,7 @@
 'use strict';
 
 var gitignore = require('../middleware/gitignore');
-var unignore = require('../middleware/unignore');
 var dotfiles = require('../middleware/dotfiles');
-var isnt = require('../middleware/isnt');
 var files = [];
 
 var glob = require('..')({ gitignore: true, track: true })
@@ -11,7 +9,7 @@ var glob = require('..')({ gitignore: true, track: true })
   .exclude('*.js')
   .exclude('*.yml')
   .use(dotfiles())
-  .use(gitignore())
+  .use(gitignore());
 
 
 glob.readdirStream('**/*')

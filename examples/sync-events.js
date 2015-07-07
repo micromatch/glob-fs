@@ -27,7 +27,8 @@ glob.on('exclude', function (file) {
 });
 
 glob.on('include', function (file) {
-  console.log('included:', i.includes++)
+  // console.log(file.path);
+  console.log('included:', i.includes++);
 });
 
 glob.on('end', function () {
