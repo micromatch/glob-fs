@@ -1,6 +1,6 @@
 {
   "name": "glob-fs",
-  "description": "node.js file globbing done right.",
+  "description": "file globbing, for node.js.",
   "version": "0.1.0",
   "homepage": "https://github.com/jonschlinkert/glob-fs",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -10,7 +10,9 @@
   },
   "license": "MIT",
   "files": [
-    "index.js"
+    "index.js",
+    "middleware/",
+    "lib/"
   ],
   "main": "index.js",
   "engines": {
@@ -26,8 +28,12 @@
     "export-files": "^2.0.1",
     "extend-shallow": "^2.0.0",
     "glob-parent": "^1.2.0",
+    "graceful-fs": "^4.1.2",
+    "is-dotdir": "^0.1.0",
+    "is-dotfile": "^1.0.1",
+    "is-glob": "^2.0.0",
+    "kind-of": "^2.0.0",
     "lazy-cache": "^0.1.0",
-    "map-visit": "^0.1.0",
     "micromatch": "^2.1.6",
     "minimatch": "^2.0.8",
     "object-visit": "^0.1.0",
@@ -36,10 +42,14 @@
     "through2": "^2.0.0"
   },
   "devDependencies": {
-    "globby": "^2.1.0",
-    "gulp": "^3.9.0",
     "mocha": "*",
     "should": "*"
   },
-  "keywords": []
+  "keywords": [
+    "file",
+    "fs",
+    "glob",
+    "match",
+    "path"
+  ]
 }
