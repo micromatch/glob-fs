@@ -2,14 +2,19 @@
 
 var mm = require('micromatch');
 var extend = require('extend-shallow');
+var isnt = require('./isnt');
 
 module.exports = function (pattern, options) {
-  var isMatch = mm.matcher(pattern, options);
+  var opts = extend({ matchBase: true }, options);
 
-  return function exclude(file, opts) {
-    opts = extend({}, opts, options);
+  var isMatch = typeOf(pattern) === 'regexp'
+    ? isnt(pattern)
+    : mm.matcher(pattern, opts);
 
-    file.exclude = isMatch(file.path, opts);
+  return function exclude(file) {
+    if (isMatch(file.path)) {
+      file.exclude = true;
+    }
     return file;
   };
 };

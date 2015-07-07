@@ -6,7 +6,7 @@ var ignore = require('parse-gitignore');
 var mm = require('micromatch');
 var cache = {};
 
-function gitignore(fp) {
+function parseGitignore(fp) {
   if (cache[fp]) return cache[fp];
   if (!fs.existsSync(fp)) return [];
   var str = fs.readFileSync(fp, 'utf8');
@@ -14,11 +14,13 @@ function gitignore(fp) {
 }
 
 module.exports = function (options) {
-  var ignored = gitignore('.gitignore');
-  var isMatch = mm.matcher(ignored.join('|'), {contains: true});
+  options = extend({ contains: true }, options);
+  var ignored = parseGitignore('.gitignore');
+  var isMatch = mm.matcher(ignored.join('|'), options);
 
-  return function (file, opts) {
+  return function gitignore(file, opts) {
     opts = extend({}, options, opts);
+
     if (opts.gitignore === false) return file;
     if (isMatch(file.path)) {
       file.exclude = true;
