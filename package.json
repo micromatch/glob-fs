@@ -1,6 +1,6 @@
 {
   "name": "glob-fs",
-  "description": "file globbing, for node.js.",
+  "description": "file globbing for node.js. speedy and powerful alternative to node-glob.",
   "version": "0.1.1",
   "homepage": "https://github.com/jonschlinkert/glob-fs",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
