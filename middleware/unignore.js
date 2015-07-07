@@ -15,3 +15,22 @@ module.exports = function (pattern, options) {
     return file;
   };
 };
+
+/**
+ * Unignore a previously-ignored file.
+ *
+ * @param  {String} `pattern`
+ * @return {Object}
+ */
+
+module.exports.exclude = function (pattern) {
+  for (var key in this.excludes) {
+    if (mm.isMatch(key, pattern)) {
+      this.includes[key] = this.excludes[key];
+      this.files.push(key);
+      delete this.excludes[key];
+      break;
+    }
+  }
+  return this;
+};
