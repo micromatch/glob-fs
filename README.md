@@ -1,6 +1,6 @@
 # glob-fs [![NPM version](https://badge.fury.io/js/glob-fs.svg)](http://badge.fury.io/js/glob-fs)
 
-> file globbing, for node.js.
+> file globbing for node.js. speedy and powerful alternative to node-glob.
 
 ## Usage
 
@@ -33,7 +33,6 @@ See [more examples](#examples) (WIP!):
   - [sync](#sync)
 * [Events](#events)
   - [Event examples](#event-examples)
-* [[node-glob] comparison](#-node-glob--comparison)
 * [TODO](#todo)
 * [Related projects](#related-projects)
 * [Running tests](#running-tests)
@@ -420,10 +419,6 @@ glob.readdirStream('**/*')
   });
 ```
 
-## [node-glob](https://github.com/isaacs/node-glob/)comparison
-
-_(TODO)_
-
 ## TODO
 
 * [ ] Multiple pattern support. will need to change pattern handling, middleware handling. this is POC currently
@@ -442,6 +437,7 @@ _(TODO)_
 * [x] glob.readdirStream
 * [x] glob.readdirPromise
 * [ ] clean up `./lib`
+* [ ](https://github.com/isaacs/node-glob/)[] comparison
 
 ## Related projects
 
