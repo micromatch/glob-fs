@@ -1,7 +1,7 @@
 {
   "name": "glob-fs",
   "description": "file globbing, for node.js.",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "homepage": "https://github.com/jonschlinkert/glob-fs",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/glob-fs",
@@ -27,6 +27,8 @@
     "component-emitter": "^1.2.0",
     "export-files": "^2.0.1",
     "extend-shallow": "^2.0.0",
+    "glob-fs-dotfiles": "^0.1.1",
+    "glob-fs-gitignore": "^0.1.0",
     "glob-parent": "^1.2.0",
     "graceful-fs": "^4.1.2",
     "is-dotdir": "^0.1.0",
