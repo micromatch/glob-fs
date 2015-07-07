@@ -4,14 +4,14 @@
  * Module dependencies
  */
 
+var omit = require('object.omit');
 var visit = require('object-visit');
-var mapVisit = require('map-visit');
 var extend = require('extend-shallow');
 var Emitter = require('component-emitter');
-var exclude = require('./middleware/exclude');
-var include = require('./middleware/include');
 
 var File = require('./lib/file');
+var exclude = require('./middleware/exclude');
+var include = require('./middleware/include');
 var iterators = require('./lib/iterators');
 var Pattern = require('./lib/pattern');
 var readdir = require('./lib/readdir');
@@ -42,21 +42,21 @@ Glob.prototype = Emitter({
 
   /**
    * Initialize private objects.
-   *
-   * @param  {[type]} pattern [description]
-   * @param  {[type]} options [description]
-   * @return {[type]}
    */
 
   init: function (options) {
-    this.ignored = [];
+    this.includes = {};
+    this.excludes = {};
     this.files = [];
-    this.list = [];
     this.fns = [];
     this.defaults(options);
     iterators(this);
     readdir(this);
   },
+
+  /**
+   * Set configuration defaults.
+   */
 
   defaults: function (opts) {
     if (opts.ignore) {
@@ -70,12 +70,29 @@ Glob.prototype = Emitter({
     }
   },
 
+  /**
+   * Create an instance of `Pattern` for the current glob pattern.
+   *
+   * @param {String} `pattern`
+   * @param {Object} `options`
+   */
+
   setPattern: function (pattern, options) {
     this.pattern = new Pattern(pattern, options);
     this.recurse = this.shouldRecurse(this.pattern.glob, options);
     this.include(this.pattern.glob, options);
     return this;
   },
+
+  /**
+   * Create a file object with the given properties.
+   *
+   * @param  {String} `dir`
+   * @param  {String} `segment`
+   * @param  {String} `fp`
+   * @param  {Object} `stat`
+   * @return {Object}
+   */
 
   createFile: function (dir, segment, fp, stat) {
     return new File({
@@ -102,7 +119,7 @@ Glob.prototype = Emitter({
     if (typeof opts.recurse === 'boolean') {
       return opts.recurse;
     }
-    return !!pattern.isGlobstar;
+    return pattern.isGlobstar;
   },
 
   /**
@@ -116,6 +133,7 @@ Glob.prototype = Emitter({
   exclude: function(pattern, options) {
     var opts = extend({}, this.options, options);
     this.use(exclude(pattern, opts));
+    return this;
   },
 
   /**
@@ -129,6 +147,7 @@ Glob.prototype = Emitter({
   include: function(pattern, options) {
     var opts = extend({}, this.options, options);
     this.use(include(pattern, opts));
+    return this;
   },
 
   /**
@@ -153,6 +172,19 @@ Glob.prototype = Emitter({
   },
 
   /**
+   * Optionally track the history of a file as it travels
+   * through the middleware stack.
+   *
+   * @param  {Object} `file`
+   */
+
+  track: function(file) {
+    if (this.options.track !== true) {
+      file.history.push(omit(file, 'history'));
+    }
+  },
+
+  /**
    * Handle middleware.
    *
    * @param  {Object} `file`
@@ -162,10 +194,31 @@ Glob.prototype = Emitter({
 
   handle: function(file) {
     var len = this.fns.length, i = -1;
+    this.track(file);
 
     while (++i < len) {
       this.fns[i].call(this, file, this.options);
+      this.track(file);
     }
+  },
+
+  /**
+   * Unignore a previously-ignored file.
+   *
+   * @param  {String} `pattern`
+   * @return {Object}
+   */
+
+  unignore: function (pattern) {
+    for (var key in this.excludes) {
+      if (mm.isMatch(key, pattern)) {
+        this.includes[key] = this.excludes[key];
+        this.files.push(key);
+        delete this.excludes[key];
+        break;
+      }
+    }
+    return this;
   },
 
   /**
@@ -180,14 +233,6 @@ Glob.prototype = Emitter({
     utils.arrayify(arr || []).forEach(function (ele) {
       this[method](ele, options);
     }.bind(this));
-  },
-
-  /**
-   * Call the given method on each value in `obj`.
-   */
-
-  mapVisit: function (method, arr) {
-    mapVisit(this, method, arr);
     return this;
   },
 

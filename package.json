@@ -31,6 +31,7 @@
     "micromatch": "^2.1.6",
     "minimatch": "^2.0.8",
     "object-visit": "^0.1.0",
+    "object.omit": "^1.1.0",
     "parse-gitignore": "^0.1.2",
     "through2": "^2.0.0"
   },
