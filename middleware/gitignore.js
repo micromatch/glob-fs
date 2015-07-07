@@ -1,13 +1,10 @@
 'use strict';
 
 var fs = require('fs');
-var isGlob = require('is-glob');
 var extend = require('extend-shallow');
 var ignore = require('parse-gitignore');
 var mm = require('micromatch');
-var mini = require('minimatch');
 var cache = {};
-
 
 function gitignore(fp) {
   if (cache[fp]) return cache[fp];
@@ -16,18 +13,16 @@ function gitignore(fp) {
   return (cache[fp] = ignore(str));
 }
 
-exports.gitignore = function (options) {
+module.exports = function (options) {
   var ignored = gitignore('.gitignore');
   var isMatch = mm.matcher(ignored.join('|'), {contains: true});
 
-  return function (file, opts, next) {
+  return function (file, opts) {
     opts = extend({}, options, opts);
-    if (opts.gitignore === false) {
-      return next(null, file);
-    }
+    if (opts.gitignore === false) return file;
     if (isMatch(file.path)) {
       file.exclude = true;
     }
-    next(null, file);
+    return file;
   };
 };
