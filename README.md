@@ -9,7 +9,9 @@ var glob = require('glob-fs')({ gitignore: true });
 var files = glob.readdirSync('**/*.js');
 ```
 
-See [more examples](#examples) (WIP!):
+[Run actual examples](./examples/):
+
+Jump to docs sections:
 
 * [glob.readdir](#async)
 * [glob.readPromise](#promise)
