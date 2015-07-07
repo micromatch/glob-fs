@@ -1,123 +1,168 @@
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var typeOf = require('kind-of');
-var mm = require('micromatch');
-var File = require('./lib/file');
+/**
+ * Module dependencies
+ */
+
+var visit = require('object-visit');
+var mapVisit = require('map-visit');
+var extend = require('extend-shallow');
 var Emitter = require('component-emitter');
+var exclude = require('./middleware/exclude');
+var include = require('./middleware/include');
+
+var File = require('./lib/file');
+var iterators = require('./lib/iterators');
 var Pattern = require('./lib/pattern');
+var readdir = require('./lib/readdir');
 var utils = require('./lib/utils');
 
-function Glob(pattern, options) {
-  Emitter.call(this);
-  if (typeOf(pattern) === 'object') {
-    options = pattern;
-    pattern = null;
+/**
+ * Create an instance of `Glob` with the given `options`.
+ *
+ * @param {Object} `options`
+ * @api public
+ */
+
+function Glob(options) {
+  if (!(this instanceof Glob)) {
+    return new Glob(options);
   }
+  Emitter.call(this);
   this.options = options || {};
-  this.setPattern(pattern, this.options);
-  this.init(pattern, this.options);
+  this.init(options);
+  return this;
 }
 
+/**
+ * Glob prototype methods.
+ */
+
 Glob.prototype = Emitter({
-  init: function (pattern, options) {
+
+  /**
+   * Initialize private objects.
+   *
+   * @param  {[type]} pattern [description]
+   * @param  {[type]} options [description]
+   * @return {[type]}
+   */
+
+  init: function (options) {
     this.ignored = [];
     this.files = [];
     this.list = [];
     this.fns = [];
+    this.defaults(options);
+    iterators(this);
+    readdir(this);
+  },
 
-    if (options.exclude) {
-      this.map('exclude', options.exclude, options);
+  defaults: function (opts) {
+    if (opts.ignore) {
+      this.map('exclude', opts.ignore, opts);
+    }
+    if (opts.exclude) {
+      this.map('exclude', opts.exclude, opts);
+    }
+    if (opts.include) {
+      this.map('include', opts.include, opts);
     }
   },
 
   setPattern: function (pattern, options) {
     this.pattern = new Pattern(pattern, options);
-    if (typeof this.options.recurse === 'undefined') {
-      this.recurse = this.pattern.isGlobstar;
-    } else {
-      this.recurse = this.options.recurse;
-    }
+    this.recurse = this.shouldRecurse(this.pattern.glob, options);
+    this.include(this.pattern.glob, options);
     return this;
   },
 
   createFile: function (dir, segment, fp, stat) {
     return new File({
-      path: fp,
-      dirname: dir,
+      pattern: this.pattern,
       recurse: this.recurse,
+      dirname: dir,
       segment: segment,
-      stat: stat
+      stat: stat,
+      path: fp
     });
   },
 
-  lookupSync: function(dir) {
-    var files = fs.readdirSync(dir);
-    var len = files.length, i = -1;
+  /**
+   * Return `true` if the iterator should recurse, based
+   * on the given glob pattern and options.
+   *
+   * @param  {String} `pattern`
+   * @param  {Object} `options`
+   * @api public
+   */
 
-    while (++i < len) {
-      var segment = files[i];
-      var fp = path.join(dir, segment);
-      var stat = fs.lstatSync(fp);
-
-      var isDir = stat.isDirectory();
-      var file = this.createFile(dir, segment, fp, stat);
-      this.run(file);
-
-      if (isDir) {
-        this.emit('dir', file);
-      }
-      if (file.exclude === true) {
-        this.emit('exclude', file);
-      }
-      if (file.include === true) {
-        this.emit('include', file);
-      }
-
-      if (file.exclude !== true) {
-        if (file.include === true) {
-          this.files.push(file);
-          this.list.push(fp);
-        }
-        if (file.recurse !== false && isDir) {
-          this.lookupSync(fp);
-        }
-      } else {
-        this.ignored.push(file);
-      }
+  shouldRecurse: function(pattern, options) {
+    var opts = extend({}, this.options, options);
+    if (typeof opts.recurse === 'boolean') {
+      return opts.recurse;
     }
-    return this;
+    return !!pattern.isGlobstar;
   },
 
-  readdirSync: function(pattern, options) {
-    this.setPattern(pattern, options);
-    this.lookupSync(this.pattern.base);
-    return this;
+  /**
+   * Exclude files or directories that match the given `pattern`.
+   *
+   * @param  {String} `pattern`
+   * @param  {Object} `options`
+   * @api public
+   */
+
+  exclude: function(pattern, options) {
+    var opts = extend({}, this.options, options);
+    this.use(exclude(pattern, opts));
   },
+
+  /**
+   * Include files or directories that match the given `pattern`.
+   *
+   * @param  {String} `pattern`
+   * @param  {Object} `options`
+   * @api public
+   */
+
+  include: function(pattern, options) {
+    var opts = extend({}, this.options, options);
+    this.use(include(pattern, opts));
+  },
+
+  /**
+   * Add a middleware to be called in the order defined.
+   *
+   * ```js
+   * var glob = require('glob-fs')
+   *   .use(require('glob-fs-foo'))
+   *   .use(require('glob-fs-bar'))
+   *
+   * var files = glob.readdirSync('*.js');
+   * ```
+   *
+   * @param  {Function} `fn`
+   * @return {Object} Returns the `Glob` instance, for chaining.
+   * @api public
+   */
 
   use: function(fn) {
     this.fns.push(fn);
     return this;
   },
 
-  exclude: function(pattern, options) {
-    var include = mm.matcher(pattern, options);
+  /**
+   * Handle middleware.
+   *
+   * @param  {Object} `file`
+   * @return {Object}
+   * @api public
+   */
 
-    this.use(function (file) {
-      if (include(file.path)) {
-        file.exclude = true;
-      }
-      return file;
-    });
-  },
-
-  unignore: function(pattern, options) {
-
-  },
-
-  run: function(file) {
+  handle: function(file) {
     var len = this.fns.length, i = -1;
+
     while (++i < len) {
       this.fns[i].call(this, file, this.options);
     }
@@ -164,50 +209,8 @@ Glob.prototype = Emitter({
   }
 });
 
-var glob = new Glob({ gitignore: false });
+/**
+ * Expose `Glob`
+ */
 
-// glob.exclude('*.txt', {matchBase: true});
-// glob.exclude('*.js', {matchBase: true});
-var middleware = require('./middleware');
-// var mini = require('minimatch');
-
-glob.on('file', function (file) {
-  console.log('file', file.path)
-});
-
-glob.on('exclude', function (file) {
-  if (/glob\.js/.test(file.path)) {
-    file.exclude = false;
-  }
-  console.log('exclude', file.path)
-});
-
-glob
-  .use(middleware.gitignore())
-  .use(function (file) {
-    if (/^node_modules/.test(file.path)) {
-      file.exclude = true;
-    }
-    return file;
-  })
-  .use(match);
-
-function match (file) {
-  file.include = mm.isMatch(file.path, this.pattern.glob);
-  return file;
-}
-
-
-console.time('glob')
-glob.exclude('glob.js');
-glob.readdirSync('**/*.js');
-console.log(glob.list)
-console.timeEnd('glob')
-console.log(glob.files.length);
-
-// var globby = require('globby');
-// console.time('globby');
-// var globbies = globby.sync('**/*');
-// console.timeEnd('globby');
-// console.log(globbies.length);
-// // console.log(globbies);
+module.exports = Glob;
