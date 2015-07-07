@@ -8,17 +8,22 @@ var omit = require('object.omit');
 var visit = require('object-visit');
 var extend = require('extend-shallow');
 var Emitter = require('component-emitter');
-
-var File = require('./lib/file');
+var middleware = require('./lib/middleware');
 var exclude = require('./middleware/exclude');
 var include = require('./middleware/include');
 var iterators = require('./lib/iterators');
 var Pattern = require('./lib/pattern');
-var readdir = require('./lib/readdir');
+var readers = require('./lib/readers');
 var utils = require('./lib/utils');
+var File = require('./lib/file');
 
 /**
- * Create an instance of `Glob` with the given `options`.
+ * Optionally create an instance of `Glob` with the given `options`.
+ *
+ * ```js
+ * var Glob = require('glob-fs').Glob;
+ * var glob = new Glob();
+ * ```
  *
  * @param {Object} `options`
  * @api public
@@ -30,8 +35,7 @@ function Glob(options) {
   }
   Emitter.call(this);
   this.options = options || {};
-  this.init(options);
-  return this;
+  this.init(this.options);
 }
 
 /**
@@ -50,8 +54,9 @@ Glob.prototype = Emitter({
     this.files = [];
     this.fns = [];
     this.defaults(options);
+    middleware(this);
     iterators(this);
-    readdir(this);
+    readers(this);
   },
 
   /**
@@ -80,7 +85,12 @@ Glob.prototype = Emitter({
   setPattern: function (pattern, options) {
     this.pattern = new Pattern(pattern, options);
     this.recurse = this.shouldRecurse(this.pattern.glob, options);
-    this.include(this.pattern.glob, options);
+
+    var glob = this.fns.length
+      ? this.pattern.glob
+      : this.pattern.re;
+
+    this.include(glob, options);
     return this;
   },
 
@@ -111,7 +121,6 @@ Glob.prototype = Emitter({
    *
    * @param  {String} `pattern`
    * @param  {Object} `options`
-   * @api public
    */
 
   shouldRecurse: function(pattern, options) {
@@ -123,8 +132,21 @@ Glob.prototype = Emitter({
   },
 
   /**
-   * Exclude files or directories that match the given `pattern`.
+   * Thin wrapper around `.use()` for easily excluding files or
+   * directories that match the given `pattern`.
    *
+   * ```js
+   * var gitignore = require('glob-fs-gitignore');
+   * var dotfiles = require('glob-fs-dotfiles');
+   * var glob = require('glob-fs')({ foo: true })
+   *   .exclude(/\.foo$/)
+   *   .exclude('*.bar')
+   *   .exclude('*.baz');
+   *
+   * var files = glob.readdirSync('**');
+   * ```
+   *
+   * @name .exclude
    * @param  {String} `pattern`
    * @param  {Object} `options`
    * @api public
@@ -139,9 +161,9 @@ Glob.prototype = Emitter({
   /**
    * Include files or directories that match the given `pattern`.
    *
+   * @name .include
    * @param  {String} `pattern`
    * @param  {Object} `options`
-   * @api public
    */
 
   include: function(pattern, options) {
@@ -154,13 +176,16 @@ Glob.prototype = Emitter({
    * Add a middleware to be called in the order defined.
    *
    * ```js
-   * var glob = require('glob-fs')
-   *   .use(require('glob-fs-foo'))
-   *   .use(require('glob-fs-bar'))
+   * var gitignore = require('glob-fs-gitignore');
+   * var dotfiles = require('glob-fs-dotfiles');
+   * var glob = require('glob-fs')({ foo: true })
+   *   .use(gitignore())
+   *   .use(dotfiles());
    *
    * var files = glob.readdirSync('*.js');
    * ```
    *
+   * @name .use
    * @param  {Function} `fn`
    * @return {Object} Returns the `Glob` instance, for chaining.
    * @api public
@@ -179,7 +204,7 @@ Glob.prototype = Emitter({
    */
 
   track: function(file) {
-    if (this.options.track !== true) {
+    if (this.options.track === true) {
       file.history.push(omit(file, 'history'));
     }
   },
@@ -189,7 +214,6 @@ Glob.prototype = Emitter({
    *
    * @param  {Object} `file`
    * @return {Object}
-   * @api public
    */
 
   handle: function(file) {
@@ -200,25 +224,6 @@ Glob.prototype = Emitter({
       this.fns[i].call(this, file, this.options);
       this.track(file);
     }
-  },
-
-  /**
-   * Unignore a previously-ignored file.
-   *
-   * @param  {String} `pattern`
-   * @return {Object}
-   */
-
-  unignore: function (pattern) {
-    for (var key in this.excludes) {
-      if (mm.isMatch(key, pattern)) {
-        this.includes[key] = this.excludes[key];
-        this.files.push(key);
-        delete this.excludes[key];
-        break;
-      }
-    }
-    return this;
   },
 
   /**
