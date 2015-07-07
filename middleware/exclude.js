@@ -1,6 +1,7 @@
 'use strict';
 
 var mm = require('micromatch');
+var typeOf = require('kind-of');
 var extend = require('extend-shallow');
 var isnt = require('./isnt');
 
