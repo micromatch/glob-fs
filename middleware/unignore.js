@@ -3,6 +3,14 @@
 var mm = require('micromatch');
 var extend = require('extend-shallow');
 
+/**
+ * Unignore a previously-ignored file. The below code is not a good solution,
+ * it's just a reminder while this is WIP
+ *
+ * @param  {String} `pattern`
+ * @return {Object}
+ */
+
 module.exports = function (pattern, options) {
   var opts = extend({ matchBase: true }, options);
   var isMatch = mm.matcher(pattern, opts);
@@ -15,13 +23,6 @@ module.exports = function (pattern, options) {
     return file;
   };
 };
-
-/**
- * Unignore a previously-ignored file.
- *
- * @param  {String} `pattern`
- * @return {Object}
- */
 
 module.exports.exclude = function (pattern) {
   for (var key in this.excludes) {
