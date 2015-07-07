@@ -12,7 +12,7 @@ var files = glob.readdirSync('**/*.js');
 See [more examples](#examples) (WIP!):
 
 * [glob.readdir](#async)
-* glob.readPromise
+* [glob.readPromise](#promise)
 * [glob.readStream](#stream)
 * [glob.readdirSync](#sync)
 
