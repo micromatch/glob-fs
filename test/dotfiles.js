@@ -13,12 +13,6 @@ describe("changing cwd and searching for **/d", function () {
     glob.on('file', function (file) {
       // console.log(this)
     });
-    glob.on('include', function (file) {
-      // console.log(file.path)
-    });
-    glob.on('exclude', function (file) {
-      console.log(file.path)
-    });
 
     glob.on('read', function () {
       glob.files = [];
@@ -39,8 +33,8 @@ describe("changing cwd and searching for **/d", function () {
     it('should return dotfiles from a given cwd', function () {
       glob.readdirSync('.*', {cwd: 'test/fixtures', dotfiles: true}).should.containDeep(['.dotfile']);
       glob.readdirSync('fixtures/.*', {cwd: 'test', dotfiles: true}).should.containDeep(['fixtures/.dotfile']);
-      glob.readdirSync('fixtures/a/b/.*', {cwd: 'test', dotfiles: true}).should.eql(['fixtures/a/b/.dotfile']);
-      glob.readdirSync('a/b/.*', {cwd: 'test/fixtures', dotfiles: true}).should.eql(['a/b/.dotfile']);
+      glob.readdirSync('fixtures/a/b/.*', {cwd: 'test', dotfiles: true}).should.containDeep(['fixtures/a/b/.dotfile']);
+      glob.readdirSync('a/b/.*', {cwd: 'test/fixtures', dotfiles: true}).should.containDeep(['a/b/.dotfile']);
       glob.readdirSync('**/.*', {cwd: 'test/fixtures', dotfiles: true}).should.containDeep(['.dotfile']);
     });
 
@@ -53,12 +47,18 @@ describe("changing cwd and searching for **/d", function () {
     });
 
     it('should return dotdirs when `dotdirs` is true:', function () {
-      glob.readdirSync('.*', { dotdirs: true }).should.eql(['.git']);
-      glob.readdirSync('.*', { dotdirs: true }).should.not.containDeep(['.editorconfig', '.gitattributes']);
+      glob = new Glob({ dotdirs: true });
+      glob.readdirSync('.*', { dotdirs: true }).should.containDeep(['.git']);
     });
 
-    it('should return dotdirs when `dotdirs` is defined:', function () {
-      // glob.readdirSync('.*', { dotfiles: true }).should.containDeep(['.editorconfig', '.gitattributes']);
+    it('should return dotdirs when `dotdirs` is defined globally:', function () {
+      glob = new Glob({ dotfiles: true });
+      glob.readdirSync('.*').should.containDeep(['.editorconfig', '.gitattributes']);
+      glob.readdirSync('*').should.containDeep(['.gitignore']);
+    });
+
+    it('should return dotdirs when `dotdirs` is defined on a read method:', function () {
+      glob.readdirSync('.*', { dotfiles: true }).should.containDeep(['.editorconfig', '.gitattributes']);
       glob.readdirSync('*', { dotfiles: true }).should.containDeep(['.gitignore']);
     });
   });

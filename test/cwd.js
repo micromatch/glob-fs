@@ -45,8 +45,8 @@ describe("changing cwd and searching for **/d", function () {
     glob.readdirSync('assets/**/m*.css').should.eql(['assets/css/main.css']);
     glob.readdirSync('b/*.js').should.eql(['b/a.js', 'b/b.js', 'b/c.js', 'b/index.js']);
     glob.readdirSync('**/d', { cwd: 'a' }).should.eql([ 'b/c/d', 'c/d' ]);
-    glob.readdirSync('**/d', { cwd: 'a/b' }).should.eql([ 'c/d' ]);
-    glob.readdirSync('**/d', { cwd: path.resolve('a/b/') }).should.eql([ 'c/d' ]);
+    glob.readdirSync('**/d', { cwd: 'a/b' }).should.containDeep([ 'c/d' ]);
+    glob.readdirSync('**/d', { cwd: path.resolve('a/b/') }).should.containDeep([ 'c/d' ]);
     glob.readdirSync('a/**/d', { cwd: process.cwd() }).should.eql([ 'a/b/c/d', 'a/c/d' ]);
   });
 
@@ -54,7 +54,6 @@ describe("changing cwd and searching for **/d", function () {
     glob.readdirSync('a/bc/*').should.eql([ 'a/bc/e' ]);
     glob.readdirSync('*/*', {cwd: 'a'}).should.eql(['a.txt', 'b', 'bc', 'c']);
   });
-
 });
 
 describe('sync:cwd', function () {

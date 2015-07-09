@@ -3,7 +3,6 @@
 var mm = require('micromatch');
 var typeOf = require('kind-of');
 var extend = require('extend-shallow');
-var is = require('./is');
 
 module.exports = function (pattern, options) {
   var opts = extend({}, options);
@@ -22,8 +21,7 @@ module.exports = function (pattern, options) {
     }
 
     if (file.pattern.hasParent()) {
-      var full = file.pattern.relative(file.path);
-      if (isMatch(full) || file.pattern.re.test(file.segment)) {
+      if (isMatch(file.relative) || file.pattern.re.test(file.segment)) {
         file.include = true;
         return file;
       }

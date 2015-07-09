@@ -16,10 +16,10 @@ describe('basic globbing', function () {
   });
 
   beforeEach(function () {
-    glob = new Glob();
+    glob = new Glob({track: true});
 
-    glob.on('file', function (file) {
-      // console.log(file.path);
+    glob.on('parsed', function (file) {
+      // console.log(file.relative);
     });
 
     glob.on('read', function () {

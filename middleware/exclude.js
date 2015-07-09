@@ -21,8 +21,7 @@ module.exports = function (pattern, options) {
     }
 
     if (file.pattern.hasParent()) {
-      var full = file.pattern.relative(file.path);
-      if (isMatch(full) || file.pattern.re.test(file.segment)) {
+      if (isMatch(file.relative) || file.pattern.re.test(file.segment)) {
         file.exclude = true;
         return file;
       }
