@@ -4,12 +4,10 @@
  * Module dependencies
  */
 
-var path = require('path');
 var omit = require('object.omit');
 var visit = require('object-visit');
 var extend = require('extend-shallow');
 var Emitter = require('component-emitter');
-var relative = require('relative');
 var middleware = require('./lib/middleware');
 var exclude = require('./middleware/exclude');
 var include = require('./middleware/include');
@@ -52,14 +50,14 @@ Glob.prototype = Emitter({
    */
 
   init: function (options) {
+    this.middleware = {};
     this.includes = {};
     this.excludes = {};
     this.files = [];
     this.fns = [];
-    this.defaults(options);
-    symlinks(this);
-    middleware(this);
+
     iterators(this);
+    symlinks(this);
     readers(this);
   },
 
@@ -67,7 +65,7 @@ Glob.prototype = Emitter({
    * Set configuration defaults.
    */
 
-  defaults: function (opts) {
+  defaults: function (glob, opts) {
     if (opts.ignore) {
       this.map('exclude', opts.ignore, opts);
     }
@@ -77,6 +75,7 @@ Glob.prototype = Emitter({
     if (opts.include) {
       this.map('include', opts.include, opts);
     }
+    middleware(this, glob, opts);
   },
 
   /**
@@ -90,14 +89,13 @@ Glob.prototype = Emitter({
     options = options || {};
     this.pattern = new Pattern(pattern, options);
     this.recurse = this.shouldRecurse(this.pattern, options);
-    this.cwd = this.pattern.cwd;
 
     // if middleware are registered, use the glob, otherwise regex
     var glob = this.fns.length
       ? this.pattern.glob
       : this.pattern.re;
 
-    this.include(glob, options);
+    this.defaults(glob, options);
     return this;
   },
 
@@ -229,13 +227,13 @@ Glob.prototype = Emitter({
     this.track(file);
 
     while (++i < len) {
-      this.fns[i].call(this, file, this.options);
+      this.fns[i].call(this, file);
+      this.track(file);
+
       if (file.include === true || file.exclude === true) {
         break;
       }
-      this.track(file);
     }
-    file.path = relative(this.cwd, file.path);
   },
 
   /**
