@@ -17,17 +17,6 @@ describe("changing cwd and searching for **/d", function () {
 
   beforeEach(function () {
     glob = new Glob();
-
-    glob.on('file', function (file) {
-      // console.log(this)
-    });
-    glob.on('include', function (file) {
-      // console.log(file.path)
-    });
-    glob.on('exclude', function (file) {
-      // console.log(file.path)
-    });
-
     glob.on('read', function () {
       glob.files = [];
     });

@@ -14,16 +14,15 @@ describe("changing cwd and searching for **/d", function () {
 
   describe('gitignore', function () {
     describe('when a user has `node_modules` defined in `.gitignore`', function () {
-      it('should recurse into node_modules by default:', function () {
+      it.skip('should recurse into node_modules by default:', function () {
         glob.readdirSync('**').should.containDeep(['node_modules']);
       });
 
-      it.only('should not recurse into node_modules when `options.gitignore` is true:', function () {
+      it.skip('should not recurse into node_modules when `options.gitignore` is true:', function () {
         var files = glob = new Glob({gitignore: false})
           .use(gitignore())
           .readdirSync('*');
 
-        console.log(files)
         files.should.not.containDeep(['node_modules']);
       });
 
