@@ -3,20 +3,29 @@
 var mm = require('micromatch');
 var typeOf = require('kind-of');
 var extend = require('extend-shallow');
-var isnt = require('./isnt');
 
 module.exports = function (pattern, options) {
-  var opts = extend({ matchBase: true }, options);
+  var opts = extend({}, options);
+  var type = typeOf(pattern);
 
-  var isMatch = typeOf(pattern) === 'regexp'
+  var isMatch = type === 'regexp'
     ? function (fp) {
-      return !pattern.test(fp);
+      return pattern.test(fp);
     }
     : mm.matcher(pattern, opts);
 
   return function exclude(file) {
     if (isMatch(file.path)) {
       file.exclude = true;
+      return file;
+    }
+
+    if (file.pattern.hasParent()) {
+      var full = file.pattern.relative(file.path);
+      if (isMatch(full) || file.pattern.re.test(file.segment)) {
+        file.exclude = true;
+        return file;
+      }
     }
     return file;
   };
