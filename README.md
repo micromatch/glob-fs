@@ -35,6 +35,7 @@ Jump to docs sections:
   - [sync](#sync)
 * [Events](#events)
   - [Event examples](#event-examples)
+* [FAQ](#faq)
 * [TODO](#todo)
 * [Related projects](#related-projects)
 * [Running tests](#running-tests)
@@ -104,7 +105,7 @@ glob.readdir('*.js', function (err, files) {
 });
 ```
 
-### [.readdirSync](lib/readers.js#L59)
+### [.readdirSync](lib/readers.js#L60)
 
 Synchronously glob files or directories that match the given `pattern`.
 
@@ -123,7 +124,7 @@ var files = glob.readdirSync('*.js');
 //=> do stuff with `files`
 ```
 
-### [.readdirStream](lib/readers.js#L89)
+### [.readdirStream](lib/readers.js#L91)
 
 Stream files or directories that match the given glob `pattern`.
 
@@ -148,7 +149,7 @@ glob.readdirStream('*.js')
   });
 ```
 
-### [Glob](index.js#L32)
+### [Glob](index.js#L35)
 
 Optionally create an instance of `Glob` with the given `options`.
 
@@ -163,7 +164,7 @@ var Glob = require('glob-fs').Glob;
 var glob = new Glob();
 ```
 
-### [.exclude](index.js#L156)
+### [.exclude](index.js#L172)
 
 Thin wrapper around `.use()` for easily excluding files or directories that match the given `pattern`.
 
@@ -185,7 +186,7 @@ var glob = require('glob-fs')({ foo: true })
 var files = glob.readdirSync('**');
 ```
 
-### [.use](index.js#L195)
+### [.use](index.js#L211)
 
 Add a middleware to be called in the order defined.
 
@@ -333,6 +334,7 @@ _(WIP)_
 
 The following events are emitted with all "read" methods:
 
+* `read`: emitted immediately before an iterator calls the first middleware.
 * `include`: emits a `file` object when it's matched
 * `exclude`: emits a `file` object when it's ignored/excluded
 * `file`: emits a `file` object when the iterator pushes it into the results array. Only applies to `sync`, `async` and `promise`.
@@ -420,6 +422,14 @@ glob.readdirStream('**/*')
     console.log('end');
   });
 ```
+
+## FAQ
+
+* when files are read from the file system, an object is created to keep a record of the file's `path`, `dirname`, and fs `stat` object and other pertinent information that makes it easier to make decisions about inclusion and exclusion later on.
+* `file` objects are decorated with a `parse` method that is used to calculate the `file.relative` and `file.absolute` properties.
+* the `file.parse()` method is called in the iterator, right after the call to `  fs.stats` and just before the call to the middleware handler (`.handle()`). This ensures that all middleware have access to necessary path information.
+* `file.relative` is the file path that's actually pushed into the `files` array that is ultimately returned.
+* `file.relative` is calculated using `path.relative(file.path, cwd)`, where `cwd` is passed on the options (globally, or on a middleware), and `file.path` is typically the absolute, actual file path to the file being globbed.
 
 ## TODO
 
