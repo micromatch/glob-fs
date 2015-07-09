@@ -4,13 +4,16 @@
  * Module dependencies
  */
 
+var path = require('path');
 var omit = require('object.omit');
 var visit = require('object-visit');
 var extend = require('extend-shallow');
 var Emitter = require('component-emitter');
+var relative = require('relative');
 var middleware = require('./lib/middleware');
 var exclude = require('./middleware/exclude');
 var include = require('./middleware/include');
+var symlinks = require('./lib/symlinks');
 var iterators = require('./lib/iterators');
 var Pattern = require('./lib/pattern');
 var readers = require('./lib/readers');
@@ -54,6 +57,7 @@ Glob.prototype = Emitter({
     this.files = [];
     this.fns = [];
     this.defaults(options);
+    symlinks(this);
     middleware(this);
     iterators(this);
     readers(this);
@@ -83,8 +87,10 @@ Glob.prototype = Emitter({
    */
 
   setPattern: function (pattern, options) {
+    options = options || {};
     this.pattern = new Pattern(pattern, options);
-    this.recurse = this.shouldRecurse(this.pattern.glob, options);
+    this.recurse = this.shouldRecurse(this.pattern, options);
+    this.cwd = this.pattern.cwd;
 
     // if middleware are registered, use the glob, otherwise regex
     var glob = this.fns.length
@@ -105,14 +111,14 @@ Glob.prototype = Emitter({
    * @return {Object}
    */
 
-  createFile: function (dir, segment, fp, stat) {
+  // createFile: function (dir, segment, fp, stat) {
+  createFile: function (file) {
     return new File({
       pattern: this.pattern,
       recurse: this.recurse,
-      dirname: dir,
-      segment: segment,
-      stat: stat,
-      path: fp
+      dirname: file.dirname,
+      segment: file.segment,
+      path: file.path
     });
   },
 
@@ -218,13 +224,18 @@ Glob.prototype = Emitter({
    */
 
   handle: function(file) {
+    this.fns = this.fns.filter(Boolean);
     var len = this.fns.length, i = -1;
     this.track(file);
 
     while (++i < len) {
       this.fns[i].call(this, file, this.options);
+      if (file.include === true || file.exclude === true) {
+        break;
+      }
       this.track(file);
     }
+    file.path = relative(this.cwd, file.path);
   },
 
   /**
