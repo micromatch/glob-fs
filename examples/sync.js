@@ -3,5 +3,5 @@
 var glob = require('..')({ gitignore: true });
 
 
-var files = glob.readdirSync('**/*.js');
+var files = glob.readdirSync('**/*');
 console.log(files.length);
