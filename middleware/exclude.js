@@ -9,7 +9,9 @@ module.exports = function (pattern, options) {
   var opts = extend({ matchBase: true }, options);
 
   var isMatch = typeOf(pattern) === 'regexp'
-    ? isnt(pattern)
+    ? function (fp) {
+      return !pattern.test(fp);
+    }
     : mm.matcher(pattern, opts);
 
   return function exclude(file) {
