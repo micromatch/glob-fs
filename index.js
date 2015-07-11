@@ -8,13 +8,15 @@ var omit = require('object.omit');
 var visit = require('object-visit');
 var extend = require('extend-shallow');
 var Emitter = require('component-emitter');
-var middleware = require('./lib/middleware');
 var exclude = require('./middleware/exclude');
 var include = require('./middleware/include');
 var symlinks = require('./lib/symlinks');
 var iterators = require('./lib/iterators');
+var Handler = require('./lib/handler');
 var Pattern = require('./lib/pattern');
+var options = require('./lib/options');
 var readers = require('./lib/readers');
+var filter = require('./lib/filter');
 var utils = require('./lib/utils');
 var File = require('./lib/file');
 
@@ -34,9 +36,10 @@ function Glob(options) {
   if (!(this instanceof Glob)) {
     return new Glob(options);
   }
+
+  this.handler = new Handler(this);
   Emitter.call(this);
-  this.options = options || {};
-  this.init(this.options);
+  this.init(options);
 }
 
 /**
@@ -49,16 +52,19 @@ Glob.prototype = Emitter({
    * Initialize private objects.
    */
 
-  init: function (options) {
+  init: function (opts) {
+    this.options = opts || {};
     this.middleware = {};
     this.includes = {};
     this.excludes = {};
     this.files = [];
     this.fns = [];
 
+    options(this);
     iterators(this);
     symlinks(this);
     readers(this);
+    filter(this);
   },
 
   /**
@@ -75,7 +81,18 @@ Glob.prototype = Emitter({
     if (opts.include) {
       this.map('include', opts.include, opts);
     }
-    middleware(this, glob, opts);
+
+    if (opts.builtins === false) return;
+
+    // turned `on` by default
+    if (opts.dotfiles !== false) {
+      this.use(require('glob-fs-dotfiles')(opts, this));
+    }
+
+    // turned `off` by default
+    if (opts.gitignore !== true) {
+      this.use(require('glob-fs-gitignore')(opts, this));
+    }
   },
 
   /**
@@ -96,6 +113,7 @@ Glob.prototype = Emitter({
       : this.pattern.re;
 
     this.defaults(glob, options);
+    this.include(glob, options);
     return this;
   },
 
@@ -134,6 +152,30 @@ Glob.prototype = Emitter({
       return opts.recurse;
     }
     return pattern.isGlobstar;
+  },
+
+  /**
+   * Add a middleware to be called in the order defined.
+   *
+   * ```js
+   * var gitignore = require('glob-fs-gitignore');
+   * var dotfiles = require('glob-fs-dotfiles');
+   * var glob = require('glob-fs')({ foo: true })
+   *   .use(gitignore())
+   *   .use(dotfiles());
+   *
+   * var files = glob.readdirSync('*.js');
+   * ```
+   *
+   * @name .use
+   * @param  {Function} `fn`
+   * @return {Object} Returns the `Glob` instance, for chaining.
+   * @api public
+   */
+
+  use: function(fn) {
+    this.handler.use(fn);
+    return this;
   },
 
   /**
@@ -178,30 +220,6 @@ Glob.prototype = Emitter({
   },
 
   /**
-   * Add a middleware to be called in the order defined.
-   *
-   * ```js
-   * var gitignore = require('glob-fs-gitignore');
-   * var dotfiles = require('glob-fs-dotfiles');
-   * var glob = require('glob-fs')({ foo: true })
-   *   .use(gitignore())
-   *   .use(dotfiles());
-   *
-   * var files = glob.readdirSync('*.js');
-   * ```
-   *
-   * @name .use
-   * @param  {Function} `fn`
-   * @return {Object} Returns the `Glob` instance, for chaining.
-   * @api public
-   */
-
-  use: function(fn) {
-    this.fns.push(fn);
-    return this;
-  },
-
-  /**
    * Optionally track the history of a file as it travels
    * through the middleware stack.
    *
@@ -222,18 +240,8 @@ Glob.prototype = Emitter({
    */
 
   handle: function(file) {
-    this.fns = this.fns.filter(Boolean);
-    var len = this.fns.length, i = -1;
-    this.track(file);
-
-    while (++i < len) {
-      this.fns[i].call(this, file);
-      this.track(file);
-
-      if (file.include === true || file.exclude === true) {
-        break;
-      }
-    }
+    this.handler.handle(file);
+    return this;
   },
 
   /**
@@ -244,9 +252,10 @@ Glob.prototype = Emitter({
    * @return {Object} `this` for chaining
    */
 
-  map: function(method, arr, options) {
-    utils.arrayify(arr || []).forEach(function (ele) {
-      this[method](ele, options);
+  map: function(method, arr/*, arguments*/) {
+    var args = [].slice.call(arguments, 2);
+    utils.arrayify(arr || []).forEach(function (obj) {
+      this[method](obj, args);
     }.bind(this));
     return this;
   },
