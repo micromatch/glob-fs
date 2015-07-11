@@ -16,7 +16,6 @@ var Handler = require('./lib/handler');
 var Pattern = require('./lib/pattern');
 var options = require('./lib/options');
 var readers = require('./lib/readers');
-var filter = require('./lib/filter');
 var utils = require('./lib/utils');
 var File = require('./lib/file');
 
@@ -72,7 +71,6 @@ Glob.prototype = Emitter({
     iterators(this);
     symlinks(this);
     readers(this);
-    filter(this);
   },
 
   /**
@@ -93,11 +91,11 @@ Glob.prototype = Emitter({
     if (!this.disabled('builtins')) {
       // turned `on` by default
       if (!this.disabled('dotfiles')) {
-        this.use(dotfiles()(opts, this));
+        this.use(dotfiles()(opts));
       }
       // turned `off` by default
       if (this.enabled('gitignore')) {
-        this.use(gitignore()(opts, this));
+        this.use(gitignore()(opts));
       }
     }
   },

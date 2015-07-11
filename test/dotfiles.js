@@ -26,10 +26,8 @@ describe('dotfiles', function () {
       glob.readdirSync('*').should.not.containDeep(['.editorconfig', '.git']);
     });
 
-    it.only('should return dotfiles when the pattern has a leading dot:', function () {
+    it('should return dotfiles when the pattern has a leading dot:', function () {
       var files = glob.readdirSync('.*');
-      console.log(files)
-
       files.should.containDeep(['.git', '.gitignore']);
     });
 

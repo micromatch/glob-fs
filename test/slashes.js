@@ -18,14 +18,16 @@ describe("root", function () {
   beforeEach(function () {
     glob = new Glob();
 
+    glob.on('data', function (file) {
+      // console.log(file.path);
+    });
+
     glob.on('read', function () {
       glob.files = [];
     });
   });
 
-  it.skip('root', function () {
-    glob.readdirSync('/b*/**', { root: '.' }).should.eql(['b.js']);
-    // glob.readdirSync('/b*/**', { root: path.resolve('a') }).should.eql(['/b', '/b/c', '/b/c/d', '/bc', '/bc/e', '/bc/e/f']);
-    // glob.readdirSync('/b*/**', { root: 'a', cwd: path.resolve('a/b') }).should.eql([ '/b', '/b/c', '/b/c/d', '/bc', '/bc/e', '/bc/e/f' ]);
+  it('should only return directories when the pattern ends in a slash:', function () {
+    glob.readdirSync('a/**/').should.eql([ 'a/b/c/d', 'a/c/d' ]);
   });
 });

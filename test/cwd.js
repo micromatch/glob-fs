@@ -6,7 +6,7 @@ var path = require('path');
 var orig = process.cwd();
 var glob;
 
-describe("changing cwd and searching for **/d", function () {
+describe('cwd', function () {
   before(function () {
     process.chdir(__dirname + '/fixtures');
   });
@@ -22,21 +22,18 @@ describe("changing cwd and searching for **/d", function () {
     });
   });
 
-  it('cwd', function () {
+  it('should use the given cwd:', function () {
     glob.readdirSync('**/d').should.eql([ 'a/b/c/d', 'a/c/d' ]);
-    glob.readdirSync('**/d', { cwd: path.resolve('a') }).should.eql([ 'b/c/d', 'c/d' ]);
-    glob.readdirSync('**/d', { cwd: path.resolve('a/b') }).should.eql([ 'c/d' ]);
-    glob.readdirSync('**/d', { cwd: path.resolve('a/b/') }).should.eql([ 'c/d' ]);
-    glob.readdirSync('**/d', { cwd: process.cwd() }).should.eql([ 'a/b/c/d', 'a/c/d' ]);
-  });
-
-  it('should change cwd:', function () {
-    glob.readdirSync('assets/**/m*.css').should.eql(['assets/css/main.css']);
-    glob.readdirSync('b/*.js').should.eql(['b/a.js', 'b/b.js', 'b/c.js', 'b/index.js']);
     glob.readdirSync('**/d', { cwd: 'a' }).should.eql([ 'b/c/d', 'c/d' ]);
     glob.readdirSync('**/d', { cwd: 'a/b' }).should.containDeep([ 'c/d' ]);
+    glob.readdirSync('**/d', { cwd: path.resolve('a') }).should.eql([ 'b/c/d', 'c/d' ]);
+    glob.readdirSync('**/d', { cwd: path.resolve('a/b') }).should.eql([ 'c/d' ]);
     glob.readdirSync('**/d', { cwd: path.resolve('a/b/') }).should.containDeep([ 'c/d' ]);
+    glob.readdirSync('**/d', { cwd: path.resolve('a/b/') }).should.eql([ 'c/d' ]);
+    glob.readdirSync('**/d', { cwd: process.cwd() }).should.eql([ 'a/b/c/d', 'a/c/d' ]);
     glob.readdirSync('a/**/d', { cwd: process.cwd() }).should.eql([ 'a/b/c/d', 'a/c/d' ]);
+    glob.readdirSync('assets/**/m*.css').should.eql(['assets/css/main.css']);
+    glob.readdirSync('b/*.js').should.eql(['b/a.js', 'b/b.js', 'b/c.js', 'b/index.js']);
   });
 
   it('should get files in the immediate directory:', function () {

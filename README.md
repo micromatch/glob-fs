@@ -28,6 +28,7 @@ Jump to docs sections:
 * [Middleware](#middleware)
   - [Middleware examples](#middleware-examples)
   - [Middleware conventions](#middleware-conventions)
+  - [Advice for middleware authors](#advice-for-middleware-authors)
 * [Globbing examples](#globbing-examples)
   - [async](#async)
   - [promise](#promise)
@@ -59,7 +60,12 @@ $ npm i glob-fs --save
 
 **Params**
 
-All "read" methods take a glob pattern and an `options` object. Examples:
+All "read" methods take a glob pattern and an `options` object.
+
+* `pattern` **{String}**: Glob pattern to use for matching. (multiple pattern support is planned)
+* `options` **{Object}**: Options for `glob-fs` or middleware.
+
+**Examples:**
 
 ```js
 // sync
@@ -85,7 +91,7 @@ glob.readdirPromise('*.js')
 
 ## API
 
-### [.readdir](lib/readers.js#L27)
+### [.readdir](lib/readers.js#L25)
 
 Asynchronously glob files or directories that match the given `pattern`.
 
@@ -105,7 +111,7 @@ glob.readdir('*.js', function (err, files) {
 });
 ```
 
-### [.readdirSync](lib/readers.js#L60)
+### [.readdirSync](lib/readers.js#L59)
 
 Synchronously glob files or directories that match the given `pattern`.
 
@@ -124,7 +130,7 @@ var files = glob.readdirSync('*.js');
 //=> do stuff with `files`
 ```
 
-### [.readdirStream](lib/readers.js#L91)
+### [.readdirStream](lib/readers.js#L90)
 
 Stream files or directories that match the given glob `pattern`.
 
@@ -149,7 +155,7 @@ glob.readdirStream('*.js')
   });
 ```
 
-### [Glob](index.js#L35)
+### [Glob](index.js#L43)
 
 Optionally create an instance of `Glob` with the given `options`.
 
@@ -164,29 +170,7 @@ var Glob = require('glob-fs').Glob;
 var glob = new Glob();
 ```
 
-### [.exclude](index.js#L172)
-
-Thin wrapper around `.use()` for easily excluding files or directories that match the given `pattern`.
-
-**Params**
-
-* `pattern` **{String}**
-* `options` **{Object}**
-
-**Example**
-
-```js
-var gitignore = require('glob-fs-gitignore');
-var dotfiles = require('glob-fs-dotfiles');
-var glob = require('glob-fs')({ foo: true })
-  .exclude(/\.foo$/)
-  .exclude('*.bar')
-  .exclude('*.baz');
-
-var files = glob.readdirSync('**');
-```
-
-### [.use](index.js#L211)
+### [.use](index.js#L180)
 
 Add a middleware to be called in the order defined.
 
@@ -204,7 +188,30 @@ var glob = require('glob-fs')({ foo: true })
   .use(gitignore())
   .use(dotfiles());
 
-var files = glob.readdirSync('*.js');
+var files = glob.readdirSync('**');
+```
+
+### [.exclude](index.js#L221)
+
+Thin wrapper around `.use()` for easily excluding files or directories that match the given `pattern`.
+
+**Params**
+
+* `pattern` **{String}**
+* `options` **{Object}**
+
+**Example**
+
+```js
+var gitignore = require('glob-fs-gitignore');
+var dotfiles = require('glob-fs-dotfiles');
+var glob = require('glob-fs')()
+  .exclude(/\.foo$/)
+  .exclude('*.bar')
+  .exclude('*.baz');
+
+var files = glob.readdirSync('**');
+//=> ['index.js', 'README.md', ...]
 ```
 
 ## Middleware
@@ -215,66 +222,96 @@ glob-fs uses middleware to add file matching and exclusion capabilities, or othe
 
 A middleware is a function that "processes" files as they're read from the file system by glob-fs.
 
-**What does "process" mean?**
+Additionally, middleware can:
 
-Typically, it means one of the following:
-
-1. matching a `file.path`, or
-2. modifying a property on the `file` object, or
-3. determining whether or not to continue recursing
+* be chained
+* `include` or `exclude` a file based on some condition, like whether or not one of its properties matches a regex or glob pattern.
+* determine whether or not to continue recursing in a specific directory
+* modifying an existing property to the `file` object
+* add a new property to the `file` object
 
 ### Middleware examples
 
-**recursing**
+**Ignoring files**
 
-Here is how a middleware might determine whether or not to recurse based on a glob pattern:
+In the following example, `notemp` is a complete and functional middleware for excluding any filepath that has the substring `temp`:
 
 ```js
-var glob = require('glob-fs');
+var glob = require('glob-fs')();
 
-// this is already handled by glob-fs, but it 
-// makes a good example
-function recurse() {
-  return function(file) {
-    // `file.pattern` is an object with a `glob` (string) property
-    file.recurse = file.pattern.glob.indexOf('**') !== -1;
-    return file;
+function notemp(file) {
+  if (/temp/.test(file.path)) {
+    file.exclude = true;
   }
+  return file;
+}
+
+glob.use(notemp)
+  .readdirStream('**/*.js')
+  .on('data', function(file) {
+    console.log(file.relative);
+  });
+```
+
+**Matching**
+
+Pattern matching is done by default in glob-fs, but you get disable the built-in matchers or get more specific by adding a middleware that uses [micromatch][] or [minimatch][] for matching files.
+
+```js
+var glob = require('glob-fs')({ gitignore: true });
+var mm = require('micromatch');
+
+glob.use(function(file) {
+    if (mm.isMatch(file.relative, 'vendor/**')) file.exclude = true;
+    return file;
+  })
+  .readdirStream('**/*.js')
+  .on('data', function(file) {
+    console.log(file.relative);
+  });
+```
+
+**recursion**
+
+Here is how a middleware might determine whether or not to recurse based on a certain pattern:
+
+```js
+var glob = require('glob-fs')();
+
+// this specific check is already done by glob-fs, it's just used here as an example 
+function recurse(file) {
+  // `file.pattern` is an object with a `glob` (string) property
+  file.recurse = file.pattern.glob.indexOf('**') !== -1;
+  return file;
 }
 
 // use the middleware
-glob()
-  .use(recurse())
+glob.use(recurse)
   .readdir('**/*.js', function(err, files) {
     console.log(files);
   });
 ```
 
-**exclusion**
+**Built-in middleware**
 
-Middleware for excluding file paths:
+Currently glob-fs includes and runs the following middleware automatically:
+
+<!-- list automatically generated from deps. see .verb.md -->
+
+* [glob-fs-dotfiles](https://github.com/jonschlinkert/glob-fs-dotfiles): glob-fs middleware for automatically ignoring dotfiles.
+* [glob-fs-gitignore](https://github.com/jonschlinkert/glob-fs-gitignore): glob-fs middleware for automatically ignoring files specified in `.gitignore`
+
+**Disabling built-ins**
+
+To disable built-in middleware and prevent them from running, pass `builtins: false` on the global options. This will disable **all built-in middleware**.
+
+Example:
 
 ```js
-// `notests` middleware to exclude any file in the `test` directory
-function tests(options) {
-  return function(file) {
-    if (/^test\//.test(file.dirname)) {
-      file.exclude = true;
-    }
-    return file;
-  };
-}
-
-// usage
-var glob = glob({ gitignore: true })
-  .use(tests())
-
-// get files
-glob.readdirStream('**/*')
-  .on('data', function (file) {
-    console.log(file.path);
-  })
+var glob = require('glob-fs')({builtins: false});
 ```
+
+To disable a specific middleware from running, you can usually pass the name of the middleware on the options, like `dotfiles: false`, but it's best to check the readme of that middleware for specifics.
 
 ### Middleware conventions
 
@@ -282,6 +319,16 @@ glob.readdirStream('**/*')
 * **Keywords**: please add `glob-fs` to the keywords array in package.json
 * **Options**: all middleware should return a function that takes an `options` object, as in the [Middleware Example](#middleware-example)
 * **Return `file`**: all middleware should return the `file` object after processing.
+
+### Advice for middleware authors
+
+* A middleware should only do one specific thing.
+* Multiple middleware libs can be bundled together to create a single middleware.
+* Pattern matching should be extremely specific. Don't force downstream middleware to reverse your mistakes.
+* As mentioned in the [middleware conventions](#middleware-conventions) section, **always return the `file` object**.
+* A single conditional should only set `file.exclude` to `true`, or `file.include` to `true`, never both.
+* It's completely okay to check `this.options`
+* Middleware modules should be fully documented.
 
 ## Globbing examples
 
@@ -505,4 +552,4 @@ Released under the MIT license.
 
 ***
 
-_This file was generated by [verb-cli](https://github.com/assemble/verb-cli) on July 09, 2015._
+_This file was generated by [verb-cli](https://github.com/assemble/verb-cli) on July 11, 2015._

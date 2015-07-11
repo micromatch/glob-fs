@@ -26,6 +26,11 @@ module.exports = function (pattern, options) {
         return file;
       }
     }
+
+    if (file.pattern.matchDirs && file.isDirectory()) {
+      console.log(file)
+      // file.include = true;
+    }
     return file;
   };
 };
