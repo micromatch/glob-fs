@@ -8,6 +8,8 @@ var omit = require('object.omit');
 var visit = require('object-visit');
 var extend = require('extend-shallow');
 var Emitter = require('component-emitter');
+var gitignore = require('glob-fs-gitignore');
+var dotfiles = require('glob-fs-dotfiles');
 var exclude = require('./middleware/exclude');
 var include = require('./middleware/include');
 var symlinks = require('./lib/symlinks');
@@ -83,15 +85,13 @@ Glob.prototype = Emitter({
     }
 
     if (opts.builtins === false) return;
-
     // turned `on` by default
     if (opts.dotfiles !== false) {
-      this.use(require('glob-fs-dotfiles')(opts, this));
+      this.use(dotfiles(opts, this));
     }
-
     // turned `off` by default
     if (opts.gitignore !== true) {
-      this.use(require('glob-fs-gitignore')(opts, this));
+      this.use(gitignore(opts, this));
     }
   },
 
@@ -127,7 +127,6 @@ Glob.prototype = Emitter({
    * @return {Object}
    */
 
-  // createFile: function (dir, segment, fp, stat) {
   createFile: function (file) {
     return new File({
       pattern: this.pattern,

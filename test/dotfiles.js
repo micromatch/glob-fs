@@ -6,12 +6,12 @@ var path = require('path');
 var orig = process.cwd();
 var glob;
 
-describe("changing cwd and searching for **/d", function () {
+describe('dotfiles', function () {
   beforeEach(function () {
-    glob = new Glob();
+    glob = new Glob({ builtins: false });
 
     glob.on('file', function (file) {
-      // console.log(this)
+      // console.log(file.relative)
     });
 
     glob.on('read', function () {
@@ -20,14 +20,17 @@ describe("changing cwd and searching for **/d", function () {
   });
 
 
-  describe('sync:dotfiles', function () {
+  describe('sync', function () {
     it('should not return dotfiles or directories by default:', function () {
       glob.readdirSync('*').should.containDeep(['LICENSE', 'README.md']);
       glob.readdirSync('*').should.not.containDeep(['.editorconfig', '.git']);
     });
 
-    it('should return dotfiles and dotdirs when the pattern has a leading dot:', function () {
-      glob.readdirSync('.*').should.containDeep(['.git', '.gitignore']);
+    it.only('should return dotfiles when the pattern has a leading dot:', function () {
+      var files = glob.readdirSync('.*');
+      console.log(files)
+
+      files.should.containDeep(['.git', '.gitignore']);
     });
 
     it('should return dotfiles from a given cwd', function () {

@@ -1,5 +1,6 @@
 'use strict';
 
+/* deps: mocha */
 var should = require('should');
 var Glob = require('..');
 var path = require('path');
@@ -17,10 +18,6 @@ describe('basic globbing', function () {
 
   beforeEach(function () {
     glob = new Glob({track: true});
-
-    glob.on('parsed', function (file) {
-      // console.log(file.relative);
-    });
 
     glob.on('read', function () {
       glob.files = [];

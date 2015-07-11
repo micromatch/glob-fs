@@ -5,7 +5,7 @@ var Glob = require('..');
 var orig = process.cwd();
 var glob;
 
-describe('matching', function() {
+describe('globstar', function() {
   before(function () {
     process.chdir(__dirname + '/fixtures');
   });
@@ -16,7 +16,6 @@ describe('matching', function() {
 
   beforeEach(function () {
     glob = new Glob();
-
     glob.on('read', function () {
       glob.files = [];
     });
