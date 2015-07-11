@@ -8,8 +8,6 @@ var omit = require('object.omit');
 var visit = require('object-visit');
 var extend = require('extend-shallow');
 var Emitter = require('component-emitter');
-var gitignore = require('glob-fs-gitignore');
-var dotfiles = require('glob-fs-dotfiles');
 var exclude = require('./middleware/exclude');
 var include = require('./middleware/include');
 var symlinks = require('./lib/symlinks');
@@ -21,6 +19,14 @@ var readers = require('./lib/readers');
 var filter = require('./lib/filter');
 var utils = require('./lib/utils');
 var File = require('./lib/file');
+
+/**
+ * Lazily required module dependencies
+ */
+
+var lazy = require('lazy-cache')(require);
+var gitignore = lazy('glob-fs-gitignore');
+var dotfiles = lazy('glob-fs-dotfiles');
 
 /**
  * Optionally create an instance of `Glob` with the given `options`.
@@ -39,8 +45,8 @@ function Glob(options) {
     return new Glob(options);
   }
 
-  this.handler = new Handler(this);
   Emitter.call(this);
+  this.handler = new Handler(this);
   this.init(options);
 }
 
@@ -84,19 +90,20 @@ Glob.prototype = Emitter({
       this.map('include', opts.include, opts);
     }
 
-    if (opts.builtins === false) return;
-    // turned `on` by default
-    if (opts.dotfiles !== false) {
-      this.use(dotfiles(opts, this));
-    }
-    // turned `off` by default
-    if (opts.gitignore !== true) {
-      this.use(gitignore(opts, this));
+    if (!this.disabled('builtins')) {
+      // turned `on` by default
+      if (!this.disabled('dotfiles')) {
+        this.use(dotfiles()(opts, this));
+      }
+      // turned `off` by default
+      if (this.enabled('gitignore')) {
+        this.use(gitignore()(opts, this));
+      }
     }
   },
 
   /**
-   * Create an instance of `Pattern` for the current glob pattern.
+   * Create an instance of `Pattern` from the current glob pattern.
    *
    * @param {String} `pattern`
    * @param {Object} `options`
@@ -118,12 +125,10 @@ Glob.prototype = Emitter({
   },
 
   /**
-   * Create a file object with the given properties.
+   * Create a file object with properties that will be used
+   * by middleware.
    *
-   * @param  {String} `dir`
-   * @param  {String} `segment`
-   * @param  {String} `fp`
-   * @param  {Object} `stat`
+   * @param  {String} `file`
    * @return {Object}
    */
 
@@ -146,7 +151,7 @@ Glob.prototype = Emitter({
    */
 
   shouldRecurse: function(pattern, options) {
-    var opts = extend({}, this.options, options);
+    var opts = this.setDefaults(options);
     if (typeof opts.recurse === 'boolean') {
       return opts.recurse;
     }
@@ -163,7 +168,7 @@ Glob.prototype = Emitter({
    *   .use(gitignore())
    *   .use(dotfiles());
    *
-   * var files = glob.readdirSync('*.js');
+   * var files = glob.readdirSync('**');
    * ```
    *
    * @name .use
@@ -178,18 +183,33 @@ Glob.prototype = Emitter({
   },
 
   /**
+   * Include files or directories that match the given `pattern`.
+   *
+   * @name .include
+   * @param  {String} `pattern`
+   * @param  {Object} `options`
+   */
+
+  include: function(pattern, options) {
+    var opts = this.setDefaults(options);
+    this.use(include(pattern, opts));
+    return this;
+  },
+
+  /**
    * Thin wrapper around `.use()` for easily excluding files or
    * directories that match the given `pattern`.
    *
    * ```js
    * var gitignore = require('glob-fs-gitignore');
    * var dotfiles = require('glob-fs-dotfiles');
-   * var glob = require('glob-fs')({ foo: true })
+   * var glob = require('glob-fs')()
    *   .exclude(/\.foo$/)
    *   .exclude('*.bar')
    *   .exclude('*.baz');
    *
    * var files = glob.readdirSync('**');
+   * //=> ['index.js', 'README.md', ...]
    * ```
    *
    * @name .exclude
@@ -199,22 +219,8 @@ Glob.prototype = Emitter({
    */
 
   exclude: function(pattern, options) {
-    var opts = extend({}, this.options, options);
+    var opts = this.setDefaults(options);
     this.use(exclude(pattern, opts));
-    return this;
-  },
-
-  /**
-   * Include files or directories that match the given `pattern`.
-   *
-   * @name .include
-   * @param  {String} `pattern`
-   * @param  {Object} `options`
-   */
-
-  include: function(pattern, options) {
-    var opts = extend({}, this.options, options);
-    this.use(include(pattern, opts));
     return this;
   },
 
