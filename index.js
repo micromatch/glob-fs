@@ -94,7 +94,7 @@ Glob.prototype = Emitter({
         this.use(dotfiles()(opts));
       }
       // turned `off` by default
-      if (this.enabled('gitignore')) {
+      if (!this.disabled('gitignore')) {
         this.use(gitignore()(opts));
       }
     }
