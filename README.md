@@ -38,6 +38,7 @@ Jump to docs sections:
   - [Event examples](#event-examples)
 * [FAQ](#faq)
 * [TODO](#todo)
+* [Community middleware](#community-middleware)
 * [Related projects](#related-projects)
 * [Running tests](#running-tests)
 * [Contributing](#contributing)
@@ -155,7 +156,7 @@ glob.readdirStream('*.js')
   });
 ```
 
-### [Glob](index.js#L43)
+### [Glob](index.js#L42)
 
 Optionally create an instance of `Glob` with the given `options`.
 
@@ -170,7 +171,7 @@ var Glob = require('glob-fs').Glob;
 var glob = new Glob();
 ```
 
-### [.use](index.js#L180)
+### [.use](index.js#L178)
 
 Add a middleware to be called in the order defined.
 
@@ -191,7 +192,7 @@ var glob = require('glob-fs')({ foo: true })
 var files = glob.readdirSync('**');
 ```
 
-### [.exclude](index.js#L221)
+### [.exclude](index.js#L219)
 
 Thin wrapper around `.use()` for easily excluding files or directories that match the given `pattern`.
 
@@ -255,7 +256,7 @@ glob.use(notemp)
 
 **Matching**
 
-Pattern matching is done by default in glob-fs, but you get disable the built-in matchers or get more specific by adding a middleware that uses [micromatch][] or [minimatch][] for matching files.
+Pattern matching is done by default in glob-fs, but you get disable the built-in matchers or get more specific by adding a middleware that uses [micromatch][] or [minimatch](https://github.com/isaacs/minimatch#readme) for matching files.
 
 ```js
 var glob = require('glob-fs')({ gitignore: true });
@@ -517,7 +518,16 @@ glob.readdirStream('**/*')
 **other**
 
 * [ ] clean up `./lib`
-* [ ](https://github.com/isaacs/node-glob/)[] comparison
+* [ ] comparsion to [node-glob][]
+
+## Community middleware
+
+_(Add your project to the [.verb.md](./.verb.md) template do a PR!)_
+
+<!-- remove these after we get some community middleware libs listed -->
+
+* [glob-fs-dotfiles](https://github.com/jonschlinkert/glob-fs-dotfiles): glob-fs middleware for automatically ignoring dotfiles.
+* [glob-fs-gitignore](https://github.com/jonschlinkert/glob-fs-gitignore): glob-fs middleware for automatically ignoring files specified in `.gitignore`
 
 ## Related projects
 
