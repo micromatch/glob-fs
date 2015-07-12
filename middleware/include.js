@@ -1,5 +1,6 @@
 'use strict';
 
+var path = require('path');
 var mm = require('micromatch');
 var typeOf = require('kind-of');
 var extend = require('extend-shallow');
@@ -19,22 +20,32 @@ module.exports = function (pattern, options) {
     : testPattern(pattern);
 
   return function include(file) {
-    if (file.pattern.hasTrailingSlash && file.isFile()) {
+    if (this.pattern.hasTrailingSlash && file.isFile()) {
       return file;
     }
+
 
     if (isMatch(file.path)) {
       file.include = true;
       return file;
     }
 
-    if (file.pattern.hasParent()) {
+    if (this.pattern.hasParent()) {
+
       if (isMatch(file.relative)) {
         file.include = true;
         return file;
       }
 
-      if (file.pattern.test(file.segment) || file.pattern.test(file.relative)) {
+      var cwd = this.pattern.options.cwd || '.';
+      var re = this.pattern.regex;
+
+      if (re.test(path.join(cwd, file.relative))) {
+        file.include = true;
+        return file;
+      }
+
+      if (re.test(file.segment) || re.test(file.relative)) {
         file.include = true;
         return file;
       }

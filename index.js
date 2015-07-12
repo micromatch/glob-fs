@@ -6,10 +6,10 @@
 
 var omit = require('object.omit');
 var visit = require('object-visit');
-var extend = require('extend-shallow');
 var Emitter = require('component-emitter');
 var exclude = require('./middleware/exclude');
 var include = require('./middleware/include');
+var npm = require('./middleware/npm');
 var symlinks = require('./lib/symlinks');
 var iterators = require('./lib/iterators');
 var Handler = require('./lib/handler');
@@ -61,6 +61,7 @@ Glob.prototype = Emitter({
 
   init: function (opts) {
     this.options = opts || {};
+    this.pattern = null;
     this.middleware = {};
     this.includes = {};
     this.excludes = {};
@@ -88,12 +89,14 @@ Glob.prototype = Emitter({
       this.map('include', opts.include, opts);
     }
 
+    // if not disabled by the user, run the built-ins
     if (!this.disabled('builtins')) {
-      // turned `on` by default
+      if (!this.disabled('npm')) {
+        this.use(npm(opts));
+      }
       if (!this.disabled('dotfiles')) {
         this.use(dotfiles()(opts));
       }
-      // turned `off` by default
       if (!this.disabled('gitignore')) {
         this.use(gitignore()(opts));
       }

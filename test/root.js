@@ -6,7 +6,7 @@ var path = require('path');
 var orig = process.cwd();
 var glob;
 
-describe("root", function () {
+describe('root', function () {
   before(function () {
     process.chdir(__dirname + '/fixtures');
   });
@@ -25,7 +25,7 @@ describe("root", function () {
 
   it.skip('root', function () {
     glob.readdirSync('/b*/**', { root: '.' }).should.eql(['b.js']);
-    // glob.readdirSync('/b*/**', { root: path.resolve('a') }).should.eql(['/b', '/b/c', '/b/c/d', '/bc', '/bc/e', '/bc/e/f']);
-    // glob.readdirSync('/b*/**', { root: 'a', cwd: path.resolve('a/b') }).should.eql([ '/b', '/b/c', '/b/c/d', '/bc', '/bc/e', '/bc/e/f' ]);
+    glob.readdirSync('/b*/**', { root: path.resolve('a') }).should.eql(['/b', '/b/c', '/b/c/d', '/bc', '/bc/e', '/bc/e/f']);
+    glob.readdirSync('/b*/**', { root: 'a', cwd: path.resolve('a/b') }).should.eql([ '/b', '/b/c', '/b/c/d', '/bc', '/bc/e', '/bc/e/f' ]);
   });
 });
