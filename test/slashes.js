@@ -6,33 +6,33 @@ var path = require('path');
 var orig = process.cwd();
 var glob;
 
-describe("root", function () {
-  before(function () {
+describe("root", function() {
+  before(function() {
     process.chdir(__dirname + '/fixtures');
   });
 
-  after(function () {
+  after(function() {
     process.chdir(orig);
   });
   var mm = require('micromatch');
 
-  beforeEach(function () {
+  beforeEach(function() {
     glob = new Glob();
 
-    glob.on('file', function (file) {
+    glob.on('file', function(file) {
       // console.log(mm.isMatch(file.relative, 'a/*/*/*/**/'))
     });
 
-    glob.on('read', function () {
+    glob.on('read', function() {
       glob.files = [];
     });
   });
 
-  it('should only return directories when the pattern ends in a slash:', function () {
+  it('should only return directories when the pattern ends in a slash:', function() {
     glob.readdirSync('a/*/').should.eql([ 'a/b/', 'a/bc/', 'a/c/' ]);
   });
 
-  it('should recurse and return directories when the pattern ends in a slash:', function () {
+  it('should recurse and return directories when the pattern ends in a slash:', function() {
     glob.readdirSync('a/*/*/*/**/').should.eql([
       'a/b/c/d/',
       'a/bc/e/f/',

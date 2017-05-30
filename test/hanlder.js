@@ -6,24 +6,24 @@ var path = require('path');
 var orig = process.cwd();
 var glob;
 
-describe("changing cwd and searching for **/d", function () {
-  before(function () {
+describe("changing cwd and searching for **/d", function() {
+  before(function() {
     process.chdir(__dirname + '/fixtures');
   });
 
-  after(function () {
+  after(function() {
     process.chdir(orig);
   });
 
-  beforeEach(function () {
+  beforeEach(function() {
     glob = new Glob();
-    glob.on('read', function () {
+    glob.on('read', function() {
       glob.files = [];
     });
   });
 
-  it('cwd', function () {
-    // glob.handler.once('gitignore', function (file) {
+  it('cwd', function() {
+    // glob.handler.once('gitignore', function(file) {
     //   console.log(file.path);
     // });
 

@@ -4,60 +4,45 @@
   "version": "0.1.6",
   "homepage": "https://github.com/jonschlinkert/glob-fs",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
+  "contributors": [
+    "Brian Woodward (https://twitter.com/doowb)",
+    "Jon Schlinkert (http://twitter.com/jonschlinkert)"
+  ],
   "repository": "jonschlinkert/glob-fs",
   "bugs": {
     "url": "https://github.com/jonschlinkert/glob-fs/issues"
   },
   "license": "MIT",
-  "files": [
-    "index.js",
-    "middleware/",
-    "lib/"
-  ],
-  "main": "index.js",
+  "files": [],
   "engines": {
     "node": ">=0.10.0"
   },
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {
-    "async": "^1.3.0",
-    "bluebird": "^2.9.33",
-    "component-emitter": "^1.2.0",
-    "ends-with": "^0.2.0",
-    "export-files": "^2.0.1",
-    "extend-shallow": "^2.0.0",
-    "get-value": "^1.1.5",
-    "glob-fs-dotfiles": "^0.1.6",
-    "glob-fs-gitignore": "^0.1.5",
-    "glob-parent": "^1.2.0",
-    "graceful-fs": "^4.1.2",
-    "is-dotdir": "^0.1.0",
-    "is-dotfile": "^1.0.1",
-    "is-glob": "^2.0.0",
-    "is-windows": "^0.1.0",
-    "kind-of": "^2.0.0",
-    "lazy-cache": "^0.1.0",
-    "micromatch": "jonschlinkert/micromatch#2.2.0",
-    "mixin-object": "^2.0.0",
-    "object-visit": "^0.1.0",
-    "object.omit": "^1.1.0",
-    "parse-filepath": "^0.6.1",
-    "relative": "^3.0.1",
-    "set-value": "^0.2.0",
-    "starts-with": "^1.0.2",
-    "through2": "^2.0.0"
-  },
   "devDependencies": {
-    "mocha": "*",
-    "should": "*"
+    "mocha": "^3.4.2"
   },
   "keywords": [
     "file",
+    "file-path",
+    "file-system",
     "fs",
     "glob",
     "match",
     "path"
-  ]
+  ],
+  "verb": {
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
+    "lint": {
+      "reflinks": true
+    }
+  }
 }
