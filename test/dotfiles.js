@@ -6,32 +6,31 @@ var path = require('path');
 var orig = process.cwd();
 var glob;
 
-describe('dotfiles', function () {
-  beforeEach(function () {
+describe('dotfiles', function() {
+  beforeEach(function() {
     glob = new Glob({ builtins: false });
 
-    glob.on('file', function (file) {
+    glob.on('file', function(file) {
       // console.log(file.relative)
     });
 
-    glob.on('read', function () {
+    glob.on('read', function() {
       glob.files = [];
     });
   });
 
-
-  describe('sync', function () {
-    it('should not return dotfiles or directories by default:', function () {
+  describe('sync', function() {
+    it('should not return dotfiles or directories by default:', function() {
       glob.readdirSync('*').should.containDeep(['LICENSE', 'README.md']);
       glob.readdirSync('*').should.not.containDeep(['.editorconfig', '.git']);
     });
 
-    it('should return dotfiles when the pattern has a leading dot:', function () {
+    it('should return dotfiles when the pattern has a leading dot:', function() {
       var files = glob.readdirSync('.*');
       files.should.containDeep(['.git', '.gitignore']);
     });
 
-    it('should return dotfiles from a given cwd', function () {
+    it('should return dotfiles from a given cwd', function() {
       glob.readdirSync('.*', {cwd: 'test/fixtures', dotfiles: true}).should.containDeep(['.dotfile']);
       glob.readdirSync('fixtures/.*', {cwd: 'test', dotfiles: true}).should.containDeep(['fixtures/.dotfile']);
       glob.readdirSync('fixtures/a/b/.*', {cwd: 'test', dotfiles: true}).should.containDeep(['fixtures/a/b/.dotfile']);
@@ -39,30 +38,29 @@ describe('dotfiles', function () {
       glob.readdirSync('**/.*', {cwd: 'test/fixtures', dotfiles: true}).should.containDeep(['a/.dotfile']);
     });
 
-    it('should return dotfiles and directories when `dot` is true:', function () {
+    it('should return dotfiles and directories when `dot` is true:', function() {
       glob.readdirSync('.*', { dot: true }).should.containDeep(['.editorconfig', '.git', '.gitattributes', '.gitignore', '.jshintrc', '.verb.md']);
     });
 
-    it('should return dotfiles when `dotfiles` is true:', function () {
+    it('should return dotfiles when `dotfiles` is true:', function() {
       glob.readdirSync('.*', { dotfiles: true }).should.containDeep(['.editorconfig', '.gitattributes', '.gitignore', '.jshintrc', '.verb.md']);
     });
 
-    it('should return dotdirs when `dotdirs` is true:', function () {
+    it('should return dotdirs when `dotdirs` is true:', function() {
       glob = new Glob({ dotdirs: true });
       glob.readdirSync('.*', { dotdirs: true }).should.containDeep(['.git']);
     });
 
-    it('should return dotdirs when `dotdirs` is defined globally:', function () {
+    it('should return dotdirs when `dotdirs` is defined globally:', function() {
       glob = new Glob({ dotfiles: true });
       glob.readdirSync('.*').should.containDeep(['.editorconfig', '.gitattributes']);
       glob.readdirSync('*').should.containDeep(['.gitignore']);
     });
 
-    it('should return dotdirs when `dotdirs` is defined on a read method:', function () {
+    it('should return dotdirs when `dotdirs` is defined on a read method:', function() {
       glob.readdirSync('.*', { dotfiles: true }).should.containDeep(['.editorconfig', '.gitattributes']);
       // glob.readdirSync('*', { dotfiles: true }).should.containDeep(['.gitignore']);
     });
   });
 });
-
 
