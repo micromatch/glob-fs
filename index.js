@@ -118,7 +118,7 @@ Glob.prototype = Emitter({
     // if middleware are registered, use the glob, otherwise regex
     var glob = this.fns.length
       ? this.pattern.glob
-      : this.pattern.re;
+      : this.pattern.regex;
 
     this.defaults(glob, options);
     this.include(glob, options);
