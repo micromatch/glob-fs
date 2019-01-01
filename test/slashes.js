@@ -6,7 +6,7 @@ var path = require('path');
 var orig = process.cwd();
 var glob;
 
-describe("root", function () {
+describe("slashes", function () {
   before(function () {
     process.chdir(__dirname + '/fixtures');
   });

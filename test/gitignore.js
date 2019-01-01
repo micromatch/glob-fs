@@ -27,6 +27,7 @@ describe('gitignore', function () {
       });
 
       it('should recurse into node_modules when it\'s specified in the glob pattern:', function () {
+        glob = new Glob({ gitignore: false })
         glob.readdirSync('./node_modules/micromatch/*.js').should.containDeep(['node_modules/micromatch/index.js']);
       });
 
