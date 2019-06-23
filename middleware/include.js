@@ -4,10 +4,11 @@ var path = require('path');
 var mm = require('micromatch');
 var typeOf = require('kind-of');
 var extend = require('extend-shallow');
+var isWindows = require('is-windows');
 
 function testPattern(pattern) {
   return function (fp) {
-    return pattern.test(fp);
+    return pattern.test(isWindows ? fp.split('\\').join('/') : fp);
   }
 }
 
