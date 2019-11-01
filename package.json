@@ -45,7 +45,7 @@
     "object.omit": "^1.1.0",
     "parse-filepath": "^0.6.1",
     "relative": "^3.0.1",
-    "set-value": "^0.2.0",
+    "set-value": "^3.0.1",
     "starts-with": "^1.0.2",
     "through2": "^2.0.0"
   },
