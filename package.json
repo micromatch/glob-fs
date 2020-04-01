@@ -37,7 +37,7 @@
     "is-dotfile": "^1.0.1",
     "is-glob": "^2.0.0",
     "is-windows": "^0.1.0",
-    "kind-of": "^2.0.0",
+    "kind-of": "^6.0.3",
     "lazy-cache": "^0.1.0",
     "micromatch": "jonschlinkert/micromatch#2.2.0",
     "mixin-object": "^2.0.0",
