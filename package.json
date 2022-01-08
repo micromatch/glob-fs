@@ -39,7 +39,7 @@
     "is-windows": "^0.1.0",
     "kind-of": "^2.0.0",
     "lazy-cache": "^0.1.0",
-    "micromatch": "jonschlinkert/micromatch#2.2.0",
+    "micromatch": "2.2.0",
     "mixin-object": "^2.0.0",
     "object-visit": "^0.1.0",
     "object.omit": "^1.1.0",
